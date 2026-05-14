@@ -1,0 +1,61 @@
+/*
+ * am335x-sensor-cap-overlay.dts
+ *
+ * Device Tree Overlay for AM335x Sensor Capture driver on BeagleBone Black
+ *
+ * Pinmux:
+ *   P8.11  → GPIO1[13]  Channel 0  (MODE7, rx_active, no pull)
+ *   P8.12  → GPIO1[12]  Channel 1
+ *   P8.15  → GPIO1[15]  Channel 2
+ *   P8.16  → GPIO1[14]  Channel 3
+ *
+ * Build:
+ *   dtc -@ -I dts -O dtb -o am335x-sensor-cap-overlay.dtbo \
+ *       am335x-sensor-cap-overlay.dts
+ *
+ * Install:
+ *   cp am335x-sensor-cap-overlay.dtbo /lib/firmware/
+ *   echo am335x-sensor-cap-overlay > /sys/devices/platform/bone_capemgr/slots
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/am33xx.h>
+
+&{/} {
+    sensor_cap_node: sensor_cap@0 {
+        compatible = "ti,am335x-sensor-cap";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&sensor_cap_pins>;
+
+        /*
+         * capture-gpios: four pins, one per channel
+         * GPIO_ACTIVE_HIGH means IRQ fires on rising edge (configurable)
+         */
+        capture-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>,   /* ch0 P8.11 */
+                        <&gpio1 12 GPIO_ACTIVE_HIGH>,   /* ch1 P8.12 */
+                        <&gpio1 15 GPIO_ACTIVE_HIGH>,   /* ch2 P8.15 */
+                        <&gpio1 14 GPIO_ACTIVE_HIGH>;   /* ch3 P8.16 */
+
+        /* default event threshold before sysfs override */
+        threshold-default = <100>;
+    };
+};
+
+&am33xx_pinmux {
+    sensor_cap_pins: sensor_cap_pins {
+        pinctrl-single,pins = <
+            /* P8.11  GPIO1[13]  MODE7 | RX | NO_PULL */
+            AM33XX_PADCONF(AM335X_PIN_GPMC_AD13, PIN_INPUT, MUX_MODE7)
+            /* P8.12  GPIO1[12] */
+            AM33XX_PADCONF(AM335X_PIN_GPMC_AD12, PIN_INPUT, MUX_MODE7)
+            /* P8.15  GPIO1[15] */
+            AM33XX_PADCONF(AM335X_PIN_GPMC_AD15, PIN_INPUT, MUX_MODE7)
+            /* P8.16  GPIO1[14] */
+            AM33XX_PADCONF(AM335X_PIN_GPMC_AD14, PIN_INPUT, MUX_MODE7)
+        >;
+    };
+};
